@@ -1,0 +1,88 @@
+name: PR Check
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled]
+    branches: [main]
+    paths:
+      - plugins.txt
+      - themes.txt
+      - icons.txt
+      - templates.txt
+      - widgets.txt
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  check:
+    if: |
+      github.repository_owner == 'Macavity' &&
+      (github.event.action != 'labeled' || github.event.label.name == 'Check')
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BASE_PATH: .
+      HEAD_PATH: ./pr-head
+      MERGE_BASE_PATH: ./pr-base
+      REPORT_PATH: ./templates/check-result.md
+    steps:
+      - name: Check out base (main)
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Compute merge base
+        id: merge-base
+        run: |
+          set -e
+          git fetch origin "pull/${{ github.event.pull_request.number }}/head:pr-head-ref"
+          sha=$(git merge-base "${{ github.event.pull_request.base.sha }}" pr-head-ref)
+          if [ -z "$sha" ]; then
+            echo "::error::No merge base"
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Check out PR head
+        uses: actions/checkout@v6
+        with:
+          path: ${{ env.HEAD_PATH }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Check out merge base
+        uses: actions/checkout@v6
+        with:
+          path: ${{ env.MERGE_BASE_PATH }}
+          ref: ${{ steps.merge-base.outputs.sha }}
+
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run actions/check/main.ts
+        # Don't fail the step yet — we want the comment to post first.
+        continue-on-error: true
+        id: run-check
+
+      - name: Comment PR with check result
+        if: always()
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          file-path: ${{ env.REPORT_PATH }}
+          comment-tag: check-result
+          pr-number: ${{ github.event.pull_request.number }}
+
+      - name: Remove "Check" label
+        if: always() && github.event.action == 'labeled' && github.event.label.name == 'Check'
+        run: |
+          curl -L -X DELETE \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/Check"
+
+      - name: Propagate check result
+        if: steps.run-check.outcome == 'failure'
+        run: exit 1

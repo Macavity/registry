@@ -1,0 +1,47 @@
+name: Stage
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - plugins.txt
+      - themes.txt
+      - icons.txt
+      - templates.txt
+      - widgets.txt
+  schedule:
+    - cron: '*/15 * * * *'
+
+concurrency:
+  group: stage
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  stage:
+    if: ${{ github.repository_owner == 'Macavity' }}
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      STAGE_POOL_SIZE: 80
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run actions/stage/main.ts
+      - name: Commit and push
+        run: |-
+          git config --global user.email "registry-bot@users.noreply.github.com"
+          git config --global user.name "Registry Bot"
+          git add .
+          if git diff --cached --quiet; then
+            echo "no changes"
+            exit 0
+          fi
+          git diff --cached --stat
+          git commit -m ":bookmark: Update index"
+          git pull --rebase
+          git push

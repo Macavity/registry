@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["bun-types"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "baseUrl": ".",
+    "paths": {
+      "@grove/manifest-schema": ["./vendor/manifest-schema/src/index.ts"],
+      "@grove/manifest-schema/schemas/*": ["./vendor/manifest-schema/schemas/*"]
+    }
+  },
+  "include": ["actions/**/*.ts", "tests/**/*.ts", "vendor/**/*.ts"]
+}

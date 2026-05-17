@@ -1,0 +1,28 @@
+# Registry
+
+The curated registry of community extensions for the host application. This repo is the source of truth for the five `*.json` indexes that host clients fetch to populate the in-app marketplace.
+
+- **Submitting an extension?** → [`docs/submission.md`](docs/submission.md)
+- **Maintaining this registry?** → [`docs/setup.md`](docs/setup.md)
+- **Why the schema is vendored** → [`docs/vendoring.md`](docs/vendoring.md)
+
+## Index URLs
+
+Host clients fetch the indexes directly from `raw.githubusercontent.com`:
+
+```
+https://raw.githubusercontent.com/Macavity/registry/main/plugins.json
+https://raw.githubusercontent.com/Macavity/registry/main/themes.json
+https://raw.githubusercontent.com/Macavity/registry/main/icons.json
+https://raw.githubusercontent.com/Macavity/registry/main/templates.json
+https://raw.githubusercontent.com/Macavity/registry/main/widgets.json
+```
+
+## How it works in 60 seconds
+
+1. You publish your extension on GitHub with a tagged release that includes a `package.zip` asset and a manifest (`plugin.json`, `theme.json`, etc.) at the repo root.
+2. You open a PR here adding `your-org/your-repo` to one of `plugins.txt` / `themes.txt` / `icons.txt` / `templates.txt` / `widgets.txt`.
+3. The `pr-check` workflow validates your submission. The maintainer reviews and merges.
+4. Within ~15 minutes the `stage` workflow rebuilds the corresponding `*.json` index. Host clients see your extension on their next fetch.
+
+Subsequent releases of an already-listed extension are picked up automatically — no PR needed.
