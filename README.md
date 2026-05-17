@@ -4,7 +4,6 @@ The curated registry of community extensions for the host application. This repo
 
 - **Submitting an extension?** → [`docs/submission.md`](docs/submission.md)
 - **Maintaining this registry?** → [`docs/setup.md`](docs/setup.md)
-- **Why the schema is vendored** → [`docs/vendoring.md`](docs/vendoring.md)
 
 ## Index URLs
 

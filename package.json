@@ -8,11 +8,11 @@
     "stage": "bun run actions/stage/main.ts",
     "check": "bun run actions/check/main.ts",
     "sort": "bun run actions/shared/sort-txt.ts",
-    "vendor:sync": "bash scripts/sync-vendor.sh",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@grove-notes/manifest-schema": "^0.1.0",
     "@octokit/graphql": "^8.1.0",
     "@octokit/rest": "^21.0.0",
     "valibot": "^0.42.1"

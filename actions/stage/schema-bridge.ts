@@ -4,7 +4,7 @@ import {
   parseTemplateManifest as _parseTemplateManifest,
   parseThemeManifest as _parseThemeManifest,
   parseWidgetManifest as _parseWidgetManifest,
-} from '@grove/manifest-schema';
+} from '@grove-notes/manifest-schema';
 import type { AnyManifest } from './types';
 
 export type AnyManifestParse = (input: unknown) => AnyManifest;

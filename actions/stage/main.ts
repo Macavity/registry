@@ -33,7 +33,7 @@ const PARSERS: Record<ResourceType, AnyManifestParse> = {
 
 async function loadManifestSchemaVersion(): Promise<string> {
   const pkg = JSON.parse(
-    await readFile('vendor/manifest-schema/package.json', 'utf8'),
+    await readFile('node_modules/@grove-notes/manifest-schema/package.json', 'utf8'),
   ) as { version: string };
   return pkg.version;
 }

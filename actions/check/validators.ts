@@ -4,7 +4,7 @@ import {
   safeParseTemplateManifest,
   safeParseThemeManifest,
   safeParseWidgetManifest,
-} from '@grove/manifest-schema';
+} from '@grove-notes/manifest-schema';
 import { headOk } from '../shared/github';
 import { TYPE_TO_MANIFEST_FILE, type ResourceType } from '../stage/types';
 import type { ExistingIdInfo, RuleResult } from './types';

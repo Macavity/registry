@@ -4,7 +4,7 @@ import type {
   TemplateManifest,
   ThemeManifest,
   WidgetManifest,
-} from '@grove/manifest-schema';
+} from '@grove-notes/manifest-schema';
 
 export type ResourceType = 'plugins' | 'themes' | 'icons' | 'templates' | 'widgets';
 

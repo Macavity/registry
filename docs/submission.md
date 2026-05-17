@@ -15,7 +15,7 @@ Before submitting, your repository must:
 
 ## Manifest format
 
-Manifest shapes are defined by the `@grove/manifest-schema` package, vendored at `vendor/manifest-schema/`. JSON Schema files for IDE autocomplete are at `vendor/manifest-schema/schemas/*.schema.json` in this repo.
+Manifest shapes are defined by the [`@grove-notes/manifest-schema`](https://www.npmjs.com/package/@grove-notes/manifest-schema) package on npm. JSON Schema files for IDE autocomplete ship inside the package at `node_modules/@grove-notes/manifest-schema/schemas/*.schema.json` and are also served from `https://unpkg.com/@grove-notes/manifest-schema/schemas/`.
 
 Example `plugin.json`:
 
@@ -62,7 +62,7 @@ The check runs 11 rules. Each one posts a fix hint on failure:
 | Repo exists & public | GitHub returns repo metadata. |
 | `package.zip` exists | Release asset present (HEAD request). |
 | Manifest present | Right filename at repo root for the resource type. |
-| Manifest validates | Passes `@grove/manifest-schema` strict validation. |
+| Manifest validates | Passes `@grove-notes/manifest-schema` strict validation. |
 | `id` unique | No conflict with any other listed extension (any type). |
 | `id` not reserved | Not on `config/reserved-ids.txt`. |
 | `version` ↔ tag | `manifest.version` matches the release tag (modulo leading `v`). |

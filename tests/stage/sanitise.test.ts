@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import type { PluginManifest } from '@grove/manifest-schema';
+import type { PluginManifest } from '@grove-notes/manifest-schema';
 import { htmlEscape, sanitiseManifest } from '../../actions/stage/sanitise';
 
 describe('htmlEscape', () => {

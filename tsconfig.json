@@ -12,12 +12,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "baseUrl": ".",
-    "paths": {
-      "@grove/manifest-schema": ["./vendor/manifest-schema/src/index.ts"],
-      "@grove/manifest-schema/schemas/*": ["./vendor/manifest-schema/schemas/*"]
-    }
+    "verbatimModuleSyntax": true
   },
-  "include": ["actions/**/*.ts", "tests/**/*.ts", "vendor/**/*.ts"]
+  "include": ["actions/**/*.ts", "tests/**/*.ts"]
 }
