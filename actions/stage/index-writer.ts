@@ -78,11 +78,40 @@ export function stringifyIndex<M extends AnyManifest>(idx: IndexFile<M>): string
   return JSON.stringify(orderIndex(idx), null, 2) + '\n';
 }
 
+/**
+ * Two indexes are "substantively equal" when they differ only in `generatedAt`.
+ * Used to suppress no-op writes that would otherwise show up as cron-noise
+ * commits ("bump timestamp" with no real change).
+ */
+export function substantivelyEqual<M extends AnyManifest>(
+  a: IndexFile<M>,
+  b: IndexFile<M>,
+): boolean {
+  const norm = '__GENERATED_AT__';
+  return (
+    stringifyIndex({ ...a, generatedAt: norm }) === stringifyIndex({ ...b, generatedAt: norm })
+  );
+}
+
 export async function writeIndex<M extends AnyManifest>(
   type: ResourceType,
-  idx: IndexFile<M>,
+  next: IndexFile<M>,
 ): Promise<void> {
-  await writeFile(`${type}.json`, stringifyIndex(idx));
+  const path = `${type}.json`;
+  let toWrite = next;
+  try {
+    const text = await readFile(path, 'utf8');
+    const existing = JSON.parse(text) as IndexFile<M>;
+    if (substantivelyEqual(existing, next)) {
+      // Nothing meaningful changed — keep the prior generatedAt so the
+      // resulting file is byte-identical and the stage workflow's
+      // `git diff --cached --quiet` short-circuits the commit.
+      toWrite = { ...next, generatedAt: existing.generatedAt };
+    }
+  } catch {
+    // No existing file or invalid JSON — fall through and write fresh.
+  }
+  await writeFile(path, stringifyIndex(toWrite));
 }
 
 export async function readIndex<M extends AnyManifest>(type: ResourceType): Promise<IndexFile<M>> {

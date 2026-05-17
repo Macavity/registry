@@ -1,6 +1,13 @@
-import { describe, expect, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { PluginManifest } from '@grove/manifest-schema';
-import { stringifyIndex } from '../../actions/stage/index-writer';
+import {
+  stringifyIndex,
+  substantivelyEqual,
+  writeIndex,
+} from '../../actions/stage/index-writer';
 import { SCHEMA_VERSION, type IndexFile, type RegistryEntry } from '../../actions/stage/types';
 
 function entry(id: string, repository: string): RegistryEntry<PluginManifest> {
@@ -95,5 +102,90 @@ describe('stringifyIndex', () => {
       entries: [],
     };
     expect(stringifyIndex(idx).endsWith('\n')).toBe(true);
+  });
+});
+
+describe('substantivelyEqual', () => {
+  const base: IndexFile<PluginManifest> = {
+    schemaVersion: SCHEMA_VERSION,
+    generatedAt: '2026-01-01T00:00:00.000Z',
+    manifestSchemaVersion: '0.1.0',
+    count: 1,
+    entries: [entry('alpha', 'a/a')],
+  };
+
+  test('returns true when only generatedAt differs', () => {
+    const newer = { ...base, generatedAt: '2026-12-31T23:59:59.000Z' };
+    expect(substantivelyEqual(base, newer)).toBe(true);
+  });
+
+  test('returns false when entries differ', () => {
+    const changed = { ...base, entries: [entry('beta', 'a/b')], count: 1 };
+    expect(substantivelyEqual(base, changed)).toBe(false);
+  });
+
+  test('returns false when stars change on an existing entry', () => {
+    const e = entry('alpha', 'a/a');
+    const bumped: IndexFile<PluginManifest> = { ...base, entries: [{ ...e, stars: 99 }] };
+    expect(substantivelyEqual(base, bumped)).toBe(false);
+  });
+
+  test('returns false when manifestSchemaVersion bumps', () => {
+    const bumped = { ...base, manifestSchemaVersion: '0.2.0' };
+    expect(substantivelyEqual(base, bumped)).toBe(false);
+  });
+});
+
+describe('writeIndex', () => {
+  let workDir: string;
+  let originalCwd: string;
+  beforeEach(() => {
+    originalCwd = process.cwd();
+    workDir = mkdtempSync(join(tmpdir(), 'write-index-'));
+    process.chdir(workDir);
+  });
+  afterEach(() => {
+    process.chdir(originalCwd);
+    rmSync(workDir, { recursive: true, force: true });
+  });
+
+  test('preserves generatedAt when nothing substantive changed', async () => {
+    const first: IndexFile<PluginManifest> = {
+      schemaVersion: SCHEMA_VERSION,
+      generatedAt: '2026-01-01T00:00:00.000Z',
+      manifestSchemaVersion: '0.1.0',
+      count: 1,
+      entries: [entry('alpha', 'a/a')],
+    };
+    await writeIndex('plugins', first);
+    const firstBytes = readFileSync('plugins.json', 'utf8');
+
+    // Second run with a fresh generatedAt but identical content.
+    const second: IndexFile<PluginManifest> = { ...first, generatedAt: '2026-06-01T12:00:00.000Z' };
+    await writeIndex('plugins', second);
+    const secondBytes = readFileSync('plugins.json', 'utf8');
+
+    expect(secondBytes).toBe(firstBytes);
+  });
+
+  test('updates generatedAt when entries change', async () => {
+    const first: IndexFile<PluginManifest> = {
+      schemaVersion: SCHEMA_VERSION,
+      generatedAt: '2026-01-01T00:00:00.000Z',
+      manifestSchemaVersion: '0.1.0',
+      count: 1,
+      entries: [entry('alpha', 'a/a')],
+    };
+    await writeIndex('plugins', first);
+
+    const second: IndexFile<PluginManifest> = {
+      ...first,
+      generatedAt: '2026-06-01T12:00:00.000Z',
+      count: 2,
+      entries: [entry('alpha', 'a/a'), entry('beta', 'a/b')],
+    };
+    await writeIndex('plugins', second);
+    const text = readFileSync('plugins.json', 'utf8');
+    expect(text).toContain('2026-06-01T12:00:00.000Z');
   });
 });
