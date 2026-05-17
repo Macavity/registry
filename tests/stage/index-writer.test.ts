@@ -158,12 +158,12 @@ describe('writeIndex', () => {
       entries: [entry('alpha', 'a/a')],
     };
     await writeIndex('plugins', first);
-    const firstBytes = readFileSync('plugins.json', 'utf8');
+    const firstBytes = readFileSync('indexes/plugins.json', 'utf8');
 
     // Second run with a fresh generatedAt but identical content.
     const second: IndexFile<PluginManifest> = { ...first, generatedAt: '2026-06-01T12:00:00.000Z' };
     await writeIndex('plugins', second);
-    const secondBytes = readFileSync('plugins.json', 'utf8');
+    const secondBytes = readFileSync('indexes/plugins.json', 'utf8');
 
     expect(secondBytes).toBe(firstBytes);
   });
@@ -185,7 +185,7 @@ describe('writeIndex', () => {
       entries: [entry('alpha', 'a/a'), entry('beta', 'a/b')],
     };
     await writeIndex('plugins', second);
-    const text = readFileSync('plugins.json', 'utf8');
+    const text = readFileSync('indexes/plugins.json', 'utf8');
     expect(text).toContain('2026-06-01T12:00:00.000Z');
   });
 });

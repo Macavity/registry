@@ -1,6 +1,13 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import type { AnyManifest, IndexFile, RegistryEntry, ResourceType } from './types';
 import { SCHEMA_VERSION } from './types';
+
+export const INDEXES_DIR = 'indexes';
+
+export function indexPath(type: ResourceType): string {
+  return `${INDEXES_DIR}/${type}.json`;
+}
 
 const WRAPPER_KEY_ORDER = [
   'schemaVersion',
@@ -97,7 +104,7 @@ export async function writeIndex<M extends AnyManifest>(
   type: ResourceType,
   next: IndexFile<M>,
 ): Promise<void> {
-  const path = `${type}.json`;
+  const path = indexPath(type);
   let toWrite = next;
   try {
     const text = await readFile(path, 'utf8');
@@ -111,11 +118,12 @@ export async function writeIndex<M extends AnyManifest>(
   } catch {
     // No existing file or invalid JSON — fall through and write fresh.
   }
+  await mkdir(dirname(path), { recursive: true });
   await writeFile(path, stringifyIndex(toWrite));
 }
 
 export async function readIndex<M extends AnyManifest>(type: ResourceType): Promise<IndexFile<M>> {
-  const text = await readFile(`${type}.json`, 'utf8');
+  const text = await readFile(indexPath(type), 'utf8');
   return JSON.parse(text) as IndexFile<M>;
 }
 

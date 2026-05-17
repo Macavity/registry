@@ -2,6 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { parseTxt } from '../shared/txt-parser';
+import { indexPath } from '../stage/index-writer';
 import { RESOURCE_TYPES, type IndexFile, type ResourceType } from '../stage/types';
 import type { AnyManifest } from '../stage/types';
 import type { ChangedEntry, ExistingIdInfo } from './types';
@@ -119,7 +120,7 @@ async function detectIllegalFileChanges(
 export async function loadAllCurrentIds(basePath: string): Promise<Map<string, ExistingIdInfo>> {
   const map = new Map<string, ExistingIdInfo>();
   for (const type of RESOURCE_TYPES) {
-    const path = join(basePath, `${type}.json`);
+    const path = join(basePath, indexPath(type));
     if (!existsSync(path)) continue;
     const text = await readFile(path, 'utf8');
     const idx = JSON.parse(text) as IndexFile<AnyManifest>;
