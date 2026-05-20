@@ -38,7 +38,7 @@ Every manifest field is reproduced into the published index entry verbatim (afte
 ## Submitting
 
 1. **Fork** [`Macavity/registry`](https://github.com/Macavity/registry).
-2. **Add one line** `owner/repo` (lowercase) to the appropriate file:
+2. **Add one line** `owner/repo` to the appropriate file (any casing — GitHub's display form is recommended and preserved):
    - Plugins → `plugins.txt`
    - Themes → `themes.txt`
    - Icon packs → `icons.txt`

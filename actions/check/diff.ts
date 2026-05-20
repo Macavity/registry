@@ -43,12 +43,19 @@ export async function computeDiff(
     const baseText = await readTxtFromTree(mergeBasePath, file);
     const headText = await readTxtFromTree(headPath, file);
 
-    const base = new Set(parseTxt(baseText).entries);
+    const baseEntries = parseTxt(baseText).entries;
     const headParsed = parseTxt(headText);
-    const head = new Set(headParsed.entries);
+    const headEntries = headParsed.entries;
 
-    const added = [...head].filter((e) => !base.has(e)).sort();
-    const removed = [...base].filter((e) => !head.has(e)).sort();
+    // Entries preserve the author's casing but are unique-by-lowercase, so
+    // diff comparisons key on lowercase. Output keeps the original casing.
+    const baseKeys = new Set(baseEntries.map((e) => e.toLowerCase()));
+    const headKeys = new Set(headEntries.map((e) => e.toLowerCase()));
+    const byKey = (a: string, b: string): number =>
+      a.toLowerCase().localeCompare(b.toLowerCase());
+
+    const added = headEntries.filter((e) => !baseKeys.has(e.toLowerCase())).sort(byKey);
+    const removed = baseEntries.filter((e) => !headKeys.has(e.toLowerCase())).sort(byKey);
 
     perType.push({
       type,

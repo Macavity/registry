@@ -73,12 +73,41 @@ export async function rulePackageZipExists(ctx: ValidationContext): Promise<Rule
   );
 }
 
-export async function ruleManifestPresent(ctx: ValidationContext): Promise<RuleResult> {
+type HeadFn = (url: string) => Promise<{ status: number }>;
+
+export async function ruleManifestPresent(
+  ctx: ValidationContext,
+  headFn: HeadFn = headOk,
+): Promise<RuleResult> {
   const file = TYPE_TO_MANIFEST_FILE[ctx.type];
   if (!ctx.releaseTag) return fail('Manifest at repo root', 'No release tag to check.');
   const url = rawUrl(ctx, file);
-  const { status } = await headOk(url);
+  const { status } = await headFn(url);
   if (status >= 200 && status < 400) return pass('Manifest at repo root', `Found \`${file}\`.`);
+
+  // A 404 here is almost always one of two things: the manifest is genuinely
+  // missing, or the entry was added to the wrong .txt file. Probe the other
+  // manifest filenames so we can call that out explicitly.
+  const siblings: { type: ResourceType; file: string }[] = [];
+  for (const [otherType, otherFile] of Object.entries(TYPE_TO_MANIFEST_FILE) as [
+    ResourceType,
+    string,
+  ][]) {
+    if (otherType === ctx.type) continue;
+    const { status: s } = await headFn(rawUrl(ctx, otherFile));
+    if (s >= 200 && s < 400) siblings.push({ type: otherType, file: otherFile });
+  }
+
+  if (siblings.length > 0) {
+    const hint = siblings
+      .map((s) => `\`${s.file}\` (move the entry to \`${s.type}.txt\`)`)
+      .join(' or ');
+    return fail(
+      'Manifest at repo root',
+      `Expected \`${file}\` at the root of \`${ctx.owner}/${ctx.repo}\` at tag \`${ctx.releaseTag}\` (HTTP ${status}). Found ${hint} — looks like this entry is in the wrong \`.txt\` file.`,
+    );
+  }
+
   return fail(
     'Manifest at repo root',
     `Expected \`${file}\` at the root of \`${ctx.owner}/${ctx.repo}\` at tag \`${ctx.releaseTag}\`. Got HTTP ${status}.`,
@@ -236,7 +265,18 @@ export async function runAllRules(ctx: ValidationContext): Promise<RuleResult[]>
   if (!ctx.repoExists || !ctx.releaseTag) return sync;
 
   sync.push(await rulePackageZipExists(ctx));
-  sync.push(await ruleManifestPresent(ctx));
+  const manifestPresent = await ruleManifestPresent(ctx);
+  sync.push(manifestPresent);
+
+  // Without a fetched manifest, every downstream rule that reads
+  // `manifest.{id,license,version,…}` would just cascade "missing X" — that
+  // hides the real problem (which `ruleManifestPresent` already explained).
+  // Still run `ruleHasGroveExtensionTopic` since it's manifest-independent.
+  if (!manifestPresent.pass || !ctx.manifest) {
+    sync.push(ruleHasGroveExtensionTopic(ctx));
+    return sync;
+  }
+
   sync.push(ruleManifestValid(ctx));
   sync.push(ruleIdUnique(ctx));
   sync.push(ruleIdNotReserved(ctx));
