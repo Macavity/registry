@@ -4,6 +4,7 @@ import {
   ruleIdNotReserved,
   ruleIdUnique,
   ruleLicenseAllowed,
+  ruleManifestPresent,
   ruleManifestValid,
   ruleMinGroveVersion,
   ruleRepoExistsAndPublic,
@@ -140,6 +141,34 @@ describe('ruleMinGroveVersion', () => {
     const m = { ...baseCtx().manifest, minGroveVersion: '2.0.0' };
     const r = ruleMinGroveVersion(baseCtx({ manifest: m, latestGroveVersion: '1.0.0' }));
     expect(r.pass).toBe(false);
+  });
+});
+
+describe('ruleManifestPresent', () => {
+  test('passes when the expected manifest is present', async () => {
+    const head = async () => ({ status: 200 });
+    const r = await ruleManifestPresent(baseCtx({ type: 'themes' }), head);
+    expect(r.pass).toBe(true);
+    expect(r.message).toContain('theme.json');
+  });
+
+  test('suggests the right .txt file when a sibling manifest is found', async () => {
+    const head = async (url: string) => ({
+      status: url.endsWith('/theme.json') ? 200 : 404,
+    });
+    const r = await ruleManifestPresent(baseCtx({ type: 'templates' }), head);
+    expect(r.pass).toBe(false);
+    expect(r.message).toContain('theme.json');
+    expect(r.message).toContain('themes.txt');
+    expect(r.message).toContain('wrong');
+  });
+
+  test('falls back to a plain 404 message when no sibling manifest exists', async () => {
+    const head = async () => ({ status: 404 });
+    const r = await ruleManifestPresent(baseCtx({ type: 'templates' }), head);
+    expect(r.pass).toBe(false);
+    expect(r.message).toContain('HTTP 404');
+    expect(r.message).not.toContain('move the entry');
   });
 });
 
