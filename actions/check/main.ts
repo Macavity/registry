@@ -38,7 +38,7 @@ function diffLevelRules(diff: Awaited<ReturnType<typeof computeDiff>>): RuleResu
     rules.push({
       name: '`.txt` files are well-formed',
       pass: true,
-      message: 'Format OK (lowercase, sorted, no blanks, no duplicates).',
+      message: 'Format OK (sorted, no blanks, no duplicates).',
     });
   } else {
     rules.push({
