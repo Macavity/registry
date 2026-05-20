@@ -13,8 +13,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
 
 jobs:
   check:
@@ -23,12 +21,18 @@ jobs:
       (github.event.action != 'labeled' || github.event.label.name == 'Check')
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       BASE_PATH: .
       HEAD_PATH: ./pr-head
       MERGE_BASE_PATH: ./pr-base
       REPORT_PATH: ./templates/check-result.md
     steps:
+      - name: Mint Gardener App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.GARDENER_APP_ID }}
+          private-key: ${{ secrets.GARDENER_APP_PRIVATE_KEY }}
+
       - name: Check out base (main)
         uses: actions/checkout@v6
         with:
@@ -66,11 +70,14 @@ jobs:
         # Don't fail the step yet — we want the comment to post first.
         continue-on-error: true
         id: run-check
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Comment PR with check result
         if: always()
         uses: thollander/actions-comment-pull-request@v3
         with:
+          github-token: ${{ steps.app-token.outputs.token }}
           file-path: ${{ env.REPORT_PATH }}
           comment-tag: check-result
           pr-number: ${{ github.event.pull_request.number }}
@@ -80,7 +87,7 @@ jobs:
         run: |
           curl -L -X DELETE \
             -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/Check"
 
       - name: Propagate check result
