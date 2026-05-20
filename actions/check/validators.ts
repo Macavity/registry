@@ -25,7 +25,6 @@ export type ValidationContext = {
   publishedAt?: string;
   manifestText?: string;
   manifest?: Record<string, unknown>;
-  topics: string[];
   repoExists: boolean;
   allowedLicenses: Set<string>;
   reservedIds: Set<string>;
@@ -248,16 +247,6 @@ export async function rulePathsResolve(ctx: ValidationContext): Promise<RuleResu
   );
 }
 
-export function ruleHasGroveExtensionTopic(ctx: ValidationContext): RuleResult {
-  if (ctx.topics.includes('host-extension')) {
-    return pass('Repository has `host-extension` topic', 'Topic present.');
-  }
-  return fail(
-    'Repository has `host-extension` topic',
-    'Add the topic `host-extension` to your repo (Settings → Topics) so users can discover it via GitHub search.',
-  );
-}
-
 export async function runAllRules(ctx: ValidationContext): Promise<RuleResult[]> {
   const sync: RuleResult[] = [];
   sync.push(ruleRepoExistsAndPublic(ctx));
@@ -271,11 +260,7 @@ export async function runAllRules(ctx: ValidationContext): Promise<RuleResult[]>
   // Without a fetched manifest, every downstream rule that reads
   // `manifest.{id,license,version,…}` would just cascade "missing X" — that
   // hides the real problem (which `ruleManifestPresent` already explained).
-  // Still run `ruleHasGroveExtensionTopic` since it's manifest-independent.
-  if (!manifestPresent.pass || !ctx.manifest) {
-    sync.push(ruleHasGroveExtensionTopic(ctx));
-    return sync;
-  }
+  if (!manifestPresent.pass || !ctx.manifest) return sync;
 
   sync.push(ruleManifestValid(ctx));
   sync.push(ruleIdUnique(ctx));
@@ -284,6 +269,5 @@ export async function runAllRules(ctx: ValidationContext): Promise<RuleResult[]>
   sync.push(ruleLicenseAllowed(ctx));
   sync.push(ruleMinGroveVersion(ctx));
   sync.push(await rulePathsResolve(ctx));
-  sync.push(ruleHasGroveExtensionTopic(ctx));
   return sync;
 }

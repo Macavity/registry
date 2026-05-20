@@ -26,7 +26,6 @@ See `docs/submission.md` for the full guide.
 - [ ] Repo has a tagged release (e.g. `v1.0.0`) with a `package.zip` asset attached.
 - [ ] Manifest is at the **repo root** at that tag.
 - [ ] Manifest declares `id`, `version` (matching the tag, modulo a leading `v`), `license` (one of [`config/licenses.txt`](../config/licenses.txt)), and `minGroveVersion`.
-- [ ] Repo carries the GitHub topic [`host-extension`](https://github.com/topics/host-extension) (*Settings → Topics*).
 - [ ] Only `*.txt` files are changed in this PR.
 
 <!--

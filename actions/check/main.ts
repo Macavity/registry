@@ -117,7 +117,6 @@ async function main(): Promise<void> {
         publishedAt: f?.latestReleasePublishedAt,
         manifestText,
         manifest: manifestJson,
-        topics: f?.topics ?? [],
         repoExists: !!f?.exists,
         allowedLicenses,
         reservedIds,

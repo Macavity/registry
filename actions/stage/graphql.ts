@@ -6,7 +6,6 @@ export type RepoFacts = {
   latestReleaseTag?: string;
   latestReleasePublishedAt?: string;
   stars?: number;
-  topics: string[];
 };
 
 export type RepoCoords = { owner: string; name: string };
@@ -19,7 +18,6 @@ function buildQuery(chunk: RepoCoords[]): string {
       (r, j) => `r${j}: repository(owner: "${r.owner}", name: "${r.name}") {
         defaultBranchRef { name }
         stargazerCount
-        repositoryTopics(first: 20) { nodes { topic { name } } }
         latestRelease { tagName publishedAt }
       }`,
     )
@@ -30,7 +28,6 @@ function buildQuery(chunk: RepoCoords[]): string {
 type RepoNode = {
   defaultBranchRef?: { name: string } | null;
   stargazerCount?: number;
-  repositoryTopics?: { nodes: { topic: { name: string } }[] };
   latestRelease?: { tagName: string; publishedAt: string } | null;
 } | null;
 
@@ -62,7 +59,7 @@ export async function fetchRepoFacts(
       const node = data[`r${j}`];
       const key = `${r.owner}/${r.name}`;
       if (!node) {
-        result.set(key, { exists: false, topics: [] });
+        result.set(key, { exists: false });
         return;
       }
       result.set(key, {
@@ -71,7 +68,6 @@ export async function fetchRepoFacts(
         latestReleaseTag: node.latestRelease?.tagName,
         latestReleasePublishedAt: node.latestRelease?.publishedAt,
         stars: node.stargazerCount,
-        topics: node.repositoryTopics?.nodes?.map((n) => n.topic.name) ?? [],
       });
     });
   }

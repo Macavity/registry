@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'bun:test';
 import {
-  ruleHasGroveExtensionTopic,
   ruleIdNotReserved,
   ruleIdUnique,
   ruleLicenseAllowed,
@@ -31,7 +30,6 @@ function baseCtx(overrides: Partial<ValidationContext> = {}): ValidationContext 
       entry: 'dist/main.js',
       frontends: ['desktop'],
     },
-    topics: ['host-extension'],
     repoExists: true,
     allowedLicenses: new Set(['MIT', 'Apache-2.0']),
     reservedIds: new Set<string>(),
@@ -172,13 +170,3 @@ describe('ruleManifestPresent', () => {
   });
 });
 
-describe('ruleHasGroveExtensionTopic', () => {
-  test('passes when topic present', () => {
-    const r = ruleHasGroveExtensionTopic(baseCtx());
-    expect(r.pass).toBe(true);
-  });
-  test('fails when topic missing', () => {
-    const r = ruleHasGroveExtensionTopic(baseCtx({ topics: [] }));
-    expect(r.pass).toBe(false);
-  });
-});

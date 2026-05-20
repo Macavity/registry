@@ -10,8 +10,7 @@ Before submitting, your repository must:
 2. **Have a tagged release** (e.g. `v1.0.0`) with:
    - A `package.zip` asset attached (this is what the host downloads on install).
    - A manifest file at the **repo root** for the release tag — `plugin.json`, `theme.json`, `icon-pack.json`, `template.json`, or `widget.json` depending on the extension type.
-3. **Carry the GitHub topic `host-extension`.** Add it via *Settings → Topics*.
-4. **Use an SPDX license** present in [`config/licenses.txt`](../config/licenses.txt). If you need a license that's not on the list, open a PR adding it first.
+3. **Use an SPDX license** present in [`config/licenses.txt`](../config/licenses.txt). If you need a license that's not on the list, open a PR adding it first.
 
 ## Manifest format
 
@@ -55,7 +54,7 @@ Every manifest field is reproduced into the published index entry verbatim (afte
 
 ## What the PR check verifies
 
-The check runs 11 rules. Each one posts a fix hint on failure:
+The check runs 10 rules. Each one posts a fix hint on failure:
 
 | Rule | What it checks |
 |------|---------------|
@@ -69,7 +68,6 @@ The check runs 11 rules. Each one posts a fix hint on failure:
 | License allowed | `manifest.license` in `config/licenses.txt`. |
 | Min host version | `minGroveVersion` ≤ latest published host version. |
 | Paths resolve | `entry`, `readme[*]`, `iconEntry` (for themes) all 200 at the tag. |
-| `host-extension` topic | Repo carries the discoverability topic. |
 
 ## Updates after first listing
 
