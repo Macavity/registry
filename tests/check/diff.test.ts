@@ -53,9 +53,25 @@ describe('computeDiff', () => {
   });
 
   test('propagates format violations from the head tree', async () => {
-    writeFileSync(join(t.head, 'plugins.txt'), 'Paneon/Sample-Kanban\n');
+    writeFileSync(join(t.head, 'plugins.txt'), '  example/sample-kanban\n');
     const d = await computeDiff(t.base, t.head);
     const plugins = d.perType.find((p) => p.type === 'plugins')!;
-    expect(plugins.formatViolations.some((v) => v.kind === 'case')).toBe(true);
+    expect(plugins.formatViolations.some((v) => v.kind === 'whitespace')).toBe(true);
+  });
+
+  test('preserves author casing in added and treats case-only differences as a no-op', async () => {
+    writeFileSync(join(t.base, 'themes.txt'), 'macavity/dark-forest-theme\n');
+    writeFileSync(join(t.head, 'themes.txt'), 'Macavity/dark-forest-theme\n');
+    const d = await computeDiff(t.base, t.head);
+    const themes = d.perType.find((p) => p.type === 'themes')!;
+    expect(themes.added).toEqual([]);
+    expect(themes.removed).toEqual([]);
+  });
+
+  test('reports an addition with the author casing preserved', async () => {
+    writeFileSync(join(t.head, 'themes.txt'), 'Macavity/dark-forest-theme\n');
+    const d = await computeDiff(t.base, t.head);
+    const themes = d.perType.find((p) => p.type === 'themes')!;
+    expect(themes.added).toEqual(['Macavity/dark-forest-theme']);
   });
 });

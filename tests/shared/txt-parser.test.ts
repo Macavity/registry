@@ -30,13 +30,19 @@ describe('parseTxt', () => {
     expect(r.violations.some((v) => v.kind === 'blank' && v.line === 2)).toBe(true);
   });
 
-  test('flags mixed-case repo names', () => {
+  test('accepts mixed-case repo names and preserves the original casing', () => {
     const r = parseTxt('Paneon/Sample-Kanban\n');
-    expect(r.violations.some((v) => v.kind === 'case')).toBe(true);
+    expect(r.entries).toEqual(['Paneon/Sample-Kanban']);
+    expect(r.violations).toEqual([]);
   });
 
   test('flags duplicates', () => {
     const r = parseTxt('alpha/one\nalpha/one\n');
+    expect(r.violations.some((v) => v.kind === 'duplicate')).toBe(true);
+  });
+
+  test('flags case-insensitive duplicates', () => {
+    const r = parseTxt('Macavity/repo\nmacavity/repo\n');
     expect(r.violations.some((v) => v.kind === 'duplicate')).toBe(true);
   });
 

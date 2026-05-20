@@ -16,7 +16,7 @@ See `docs/submission.md` for the full guide.
 
 ## Pre-flight checklist
 
-- [ ] Added **one line** `owner/repo` (lowercase, no leading/trailing spaces) to the **correct** `.txt` file — the resource type dictates the file and the manifest filename the bot looks for:
+- [ ] Added **one line** `owner/repo` (any casing, no leading/trailing spaces) to the **correct** `.txt` file — the resource type dictates the file and the manifest filename the bot looks for:
   - plugin → `plugins.txt` → `plugin.json`
   - theme → `themes.txt` → `theme.json`
   - icon pack → `icons.txt` → `icon-pack.json`

@@ -1,7 +1,6 @@
 export type FormatViolation =
   | { kind: 'whitespace'; line: number; raw: string }
   | { kind: 'blank'; line: number }
-  | { kind: 'case'; line: number; raw: string }
   | { kind: 'duplicate'; line: number; entry: string }
   | { kind: 'out-of-order'; line: number; entry: string; shouldBeAfter: string }
   | { kind: 'invalid-format'; line: number; raw: string }
@@ -42,29 +41,29 @@ export function parseTxt(content: string): ParsedTxt {
       violations.push({ kind: 'whitespace', line: lineNo, raw });
     }
     const trimmed = raw.trim();
-    if (trimmed !== trimmed.toLowerCase()) {
-      violations.push({ kind: 'case', line: lineNo, raw });
-    }
-    const normalised = trimmed.toLowerCase();
-    if (!REPO_RE.test(normalised)) {
+    // Casing is preserved in the file (GitHub display form), but dedup, sort
+    // order, and the REPO_RE shape check are evaluated case-insensitively —
+    // GitHub resolves URLs that way too.
+    const key = trimmed.toLowerCase();
+    if (!REPO_RE.test(key)) {
       violations.push({ kind: 'invalid-format', line: lineNo, raw });
       return;
     }
-    if (seen.has(normalised)) {
-      violations.push({ kind: 'duplicate', line: lineNo, entry: normalised });
+    if (seen.has(key)) {
+      violations.push({ kind: 'duplicate', line: lineNo, entry: key });
       return;
     }
-    if (previous !== null && normalised < previous) {
+    if (previous !== null && key < previous) {
       violations.push({
         kind: 'out-of-order',
         line: lineNo,
-        entry: normalised,
+        entry: key,
         shouldBeAfter: previous,
       });
     }
-    seen.add(normalised);
-    entries.push(normalised);
-    previous = normalised;
+    seen.add(key);
+    entries.push(trimmed);
+    previous = key;
   });
 
   return { entries, violations };
